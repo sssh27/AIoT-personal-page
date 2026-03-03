@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="王彥翔的個人頁面">
+    <title>王彥翔 — Personal Page</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;500;700&family=Outfit:wght@200;300;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Noto Sans TC', 'Outfit', sans-serif;
+            background: #080615;
+            overflow: hidden;
+            color: #fff;
+            cursor: none;
+        }
+
+        /* Custom cursor */
+        .cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(127, 90, 240, 0.8);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.15s ease, border-color 0.3s ease;
+            transform: translate(-50%, -50%);
+        }
+
+        .cursor-dot {
+            position: fixed;
+            width: 6px;
+            height: 6px;
+            background: #7f5af0;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+        }
+
+        .cursor.hover {
+            transform: translate(-50%, -50%) scale(1.8);
+            border-color: #2cb67d;
+        }
+
+        /* Particle canvas */
+        #particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        /* Mouse trail canvas */
+        #trail {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        /* Floating orbs with mouse parallax */
+        .orbs-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.35;
+            transition: transform 0.3s ease-out;
+        }
+
+        .orb-1 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, #7f5af0, #5a3fd4);
+            top: -100px;
+            left: -80px;
+            animation: pulse1 6s ease-in-out infinite;
+        }
+
+        .orb-2 {
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, #2cb67d, #1a8a5e);
+            bottom: -120px;
+            right: -100px;
+            animation: pulse2 8s ease-in-out infinite;
+        }
+
+        .orb-3 {
+            width: 280px;
+            height: 280px;
+            background: radial-gradient(circle, #e16162, #c44040);
+            top: 40%;
+            left: 55%;
+            animation: pulse3 7s ease-in-out infinite;
+        }
+
+        .orb-4 {
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, #f0c27f, #d4a03f);
+            top: 20%;
+            right: 20%;
+            animation: pulse1 9s ease-in-out infinite reverse;
+        }
+
+        @keyframes pulse1 {
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+                opacity: 0.35;
+            }
+
+            33% {
+                transform: translate(30px, -20px) scale(1.1);
+                opacity: 0.45;
+            }
+
+            66% {
+                transform: translate(-20px, 15px) scale(0.95);
+                opacity: 0.3;
+            }
+        }
+
+        @keyframes pulse2 {
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+                opacity: 0.3;
+            }
+
+            50% {
+                transform: translate(-40px, -30px) scale(1.15);
+                opacity: 0.45;
+            }
+        }
+
+        @keyframes pulse3 {
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            33% {
+                transform: translate(25px, 20px) scale(1.08);
+            }
+
+            66% {
+                transform: translate(-15px, -25px) scale(0.92);
+            }
+        }
+
+        /* Card */
+        .card {
+            position: relative;
+            z-index: 2;
+            backdrop-filter: blur(28px) saturate(180%);
+            -webkit-backdrop-filter: blur(28px) saturate(180%);
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 28px;
+            padding: 56px 72px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            opacity: 0;
+            transform: translateY(40px) scale(0.94);
+            animation: cardEnter 1s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+            transition: transform 0.2s ease-out, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 16px 48px rgba(127, 90, 240, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.12);
+        }
+
+        /* Card glow effect that follows mouse */
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 28px;
+            background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+                    rgba(127, 90, 240, 0.12),
+                    transparent 40%);
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        @keyframes cardEnter {
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .greeting {
+            font-size: 0.95rem;
+            font-weight: 300;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0);
+            margin-bottom: 16px;
+            animation: fadeSlideUp 0.8s ease 0.8s forwards;
+        }
+
+        @keyframes fadeSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 0.5;
+                transform: translateY(0);
+            }
+        }
+
+        .name {
+            font-size: 3.6rem;
+            font-weight: 700;
+            position: relative;
+            display: inline-block;
+            margin-bottom: 28px;
+        }
+
+        .name-char {
+            display: inline-block;
+            opacity: 0;
+            transform: translateY(30px) rotateX(90deg);
+            background: linear-gradient(135deg, #e0c3fc, #8ec5fc, #a0f0ed);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: charReveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards,
+                shimmer 4s ease infinite;
+            transition: transform 0.3s ease;
+            cursor: none;
+        }
+
+        .name-char:hover {
+            transform: translateY(-8px) scale(1.15) !important;
+        }
+
+        @keyframes charReveal {
+            to {
+                opacity: 1;
+                transform: translateY(0) rotateX(0deg);
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .divider {
+            width: 0;
+            height: 3px;
+            margin: 0 auto 28px;
+            border-radius: 2px;
+            background: linear-gradient(90deg, #7f5af0, #2cb67d, #f0c27f);
+            background-size: 200% 100%;
+            animation: dividerGrow 0.8s cubic-bezier(0.16, 1, 0.3, 1) 1.8s forwards,
+                dividerShimmer 3s ease infinite;
+        }
+
+        @keyframes dividerGrow {
+            to {
+                width: 64px;
+            }
+        }
+
+        @keyframes dividerShimmer {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        .time-label {
+            font-size: 0.8rem;
+            font-weight: 300;
+            letter-spacing: 3px;
+            color: rgba(255, 255, 255, 0);
+            margin-bottom: 6px;
+            animation: fadeSlideUp 0.6s ease 2s forwards;
+        }
+
+        .clock {
+            font-family: 'Outfit', monospace;
+            font-size: 2.8rem;
+            font-weight: 700;
+            letter-spacing: 4px;
+            opacity: 0;
+            animation: clockReveal 0.8s ease 2.2s forwards;
+        }
+
+        .clock-digit {
+            display: inline-block;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.6) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .clock-digit.flip {
+            animation: digitFlip 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .clock-separator {
+            display: inline-block;
+            animation: blink 1s step-end infinite;
+            opacity: 0.6;
+            color: #7f5af0;
+            -webkit-text-fill-color: #7f5af0;
+        }
+
+        @keyframes clockReveal {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes digitFlip {
+            0% {
+                transform: translateY(0) scale(1);
+            }
+
+            30% {
+                transform: translateY(-8px) scale(1.1);
+                color: #7f5af0;
+            }
+
+            100% {
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 0.6;
+            }
+
+            50% {
+                opacity: 0.15;
+            }
+        }
+
+        .date {
+            font-size: 0.9rem;
+            font-weight: 300;
+            color: rgba(255, 255, 255, 0);
+            margin-top: 10px;
+            animation: fadeSlideUp 0.6s ease 2.5s forwards;
+        }
+
+        /* Status badges */
+        .status-row {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 28px;
+            opacity: 0;
+            animation: fadeSlideUp 0.6s ease 2.8s forwards;
+        }
+
+        .badge {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.6);
+            transition: all 0.3s ease;
+            cursor: none;
+        }
+
+        .badge:hover {
+            background: rgba(127, 90, 240, 0.15);
+            border-color: rgba(127, 90, 240, 0.3);
+            color: rgba(255, 255, 255, 0.9);
+            transform: translateY(-2px);
+        }
+
+        .badge-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            animation: dotPulse 2s ease-in-out infinite;
+        }
+
+        .badge-dot.green {
+            background: #2cb67d;
+        }
+
+        .badge-dot.purple {
+            background: #7f5af0;
+        }
+
+        .badge-dot.gold {
+            background: #f0c27f;
+        }
+
+        @keyframes dotPulse {
+
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.5;
+                transform: scale(0.7);
+            }
+        }
+
+        /* Ripple on click */
+        .ripple {
+            position: fixed;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(127, 90, 240, 0.3), transparent 70%);
+            pointer-events: none;
+            z-index: 9998;
+            animation: rippleExpand 0.8s ease-out forwards;
+        }
+
+        @keyframes rippleExpand {
+            from {
+                width: 0;
+                height: 0;
+                opacity: 1;
+            }
+
+            to {
+                width: 300px;
+                height: 300px;
+                opacity: 0;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 520px) {
+            .card {
+                padding: 40px 28px;
+            }
+
+            .name {
+                font-size: 2.4rem;
+            }
+
+            .clock {
+                font-size: 2rem;
+            }
+
+            .status-row {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="cursor" id="cursor"></div>
+    <div class="cursor-dot" id="cursorDot"></div>
+
+    <canvas id="particles"></canvas>
+    <canvas id="trail"></canvas>
+
+    <div class="orbs-container" id="orbsContainer">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+        <div class="orb orb-4"></div>
+    </div>
+
+    <main class="card" id="card">
+        <p class="greeting">歡迎光臨</p>
+        <h1 class="name" id="nameTitle"></h1>
+        <div class="divider"></div>
+        <p class="time-label">CURRENT TIME</p>
+        <p class="clock" id="clock"></p>
+        <p class="date" id="date"></p>
+        <div class="status-row">
+            <div class="badge">
+                <span class="badge-dot green"></span>
+                Online
+            </div>
+            <div class="badge">
+                <span class="badge-dot purple"></span>
+                Taipei
+            </div>
+            <div class="badge">
+                <span class="badge-dot gold"></span>
+                UTC+8
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // ─── NAME CHARACTER ANIMATION ───
+        const nameText = '王彥翔';
+        const nameEl = document.getElementById('nameTitle');
+        nameText.split('').forEach((char, i) => {
+            const span = document.createElement('span');
+            span.className = 'name-char';
+            span.textContent = char;
+            span.style.animationDelay = `${1.0 + i * 0.15}s, 0s`;
+            nameEl.appendChild(span);
+        });
+
+        // ─── CLOCK WITH FLIP ANIMATION ───
+        let prevTime = '';
+        function updateTime() {
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            const timeStr = `${h}:${m}:${s}`;
+
+            const clockEl = document.getElementById('clock');
+
+            if (prevTime === '') {
+                // First render
+                let html = '';
+                for (const ch of timeStr) {
+                    if (ch === ':') {
+                        html += `<span class="clock-separator">:</span>`;
+                    } else {
+                        html += `<span class="clock-digit">${ch}</span>`;
+                    }
+                }
+                clockEl.innerHTML = html;
+            } else {
+                const digits = clockEl.querySelectorAll('.clock-digit, .clock-separator');
+                let idx = 0;
+                for (let i = 0; i < timeStr.length; i++) {
+                    if (prevTime[i] !== timeStr[i] && digits[idx]) {
+                        digits[idx].textContent = timeStr[i];
+                        if (timeStr[i] !== ':') {
+                            digits[idx].classList.remove('flip');
+                            void digits[idx].offsetWidth; // trigger reflow
+                            digits[idx].classList.add('flip');
+                        }
+                    }
+                    idx++;
+                }
+            }
+            prevTime = timeStr;
+
+            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+            document.getElementById('date').textContent = now.toLocaleDateString('zh-TW', options);
+        }
+        updateTime();
+        setInterval(updateTime, 1000);
+
+        // ─── CUSTOM CURSOR ───
+        const cursor = document.getElementById('cursor');
+        const cursorDot = document.getElementById('cursorDot');
+        let mouseX = 0, mouseY = 0;
+        let cursorX = 0, cursorY = 0;
+
+        document.addEventListener('mousemove', e => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+            cursorDot.style.left = mouseX + 'px';
+            cursorDot.style.top = mouseY + 'px';
+        });
+
+        function animateCursor() {
+            cursorX += (mouseX - cursorX) * 0.15;
+            cursorY += (mouseY - cursorY) * 0.15;
+            cursor.style.left = cursorX + 'px';
+            cursor.style.top = cursorY + 'px';
+            requestAnimationFrame(animateCursor);
+        }
+        animateCursor();
+
+        // Hover effect on interactive elements
+        document.querySelectorAll('.badge, .name-char').forEach(el => {
+            el.addEventListener('mouseenter', () => cursor.classList.add('hover'));
+            el.addEventListener('mouseleave', () => cursor.classList.remove('hover'));
+        });
+
+        // ─── CARD MOUSE GLOW + 3D TILT ───
+        const card = document.getElementById('card');
+        card.addEventListener('mousemove', e => {
+            const rect = card.getBoundingClientRect();
+            const x = ((e.clientX - rect.left) / rect.width) * 100;
+            const y = ((e.clientY - rect.top) / rect.height) * 100;
+            card.style.setProperty('--mouse-x', x + '%');
+            card.style.setProperty('--mouse-y', y + '%');
+
+            // 3D tilt
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const rotateX = ((e.clientY - centerY) / rect.height) * -8;
+            const rotateY = ((e.clientX - centerX) / rect.width) * 8;
+            card.style.transform = `perspective(800px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
+        });
+        card.addEventListener('mouseleave', () => {
+            card.style.transform = 'perspective(800px) rotateX(0) rotateY(0) scale(1)';
+        });
+
+        // ─── ORB PARALLAX ───
+        const orbs = document.querySelectorAll('.orb');
+        document.addEventListener('mousemove', e => {
+            const x = (e.clientX / window.innerWidth - 0.5) * 2;
+            const y = (e.clientY / window.innerHeight - 0.5) * 2;
+            orbs.forEach((orb, i) => {
+                const speed = (i + 1) * 12;
+                orb.style.transform += ` translate(${x * speed}px, ${y * speed}px)`;
+            });
+        });
+
+        // ─── CLICK RIPPLE ───
+        document.addEventListener('click', e => {
+            const ripple = document.createElement('div');
+            ripple.className = 'ripple';
+            ripple.style.left = (e.clientX - 150) + 'px';
+            ripple.style.top = (e.clientY - 150) + 'px';
+            document.body.appendChild(ripple);
+            setTimeout(() => ripple.remove(), 800);
+        });
+
+        // ─── PARTICLE SYSTEM ───
+        const canvas = document.getElementById('particles');
+        const ctx = canvas.getContext('2d');
+        let W, H;
+
+        function resize() {
+            W = canvas.width = window.innerWidth;
+            H = canvas.height = window.innerHeight;
+        }
+        resize();
+        window.addEventListener('resize', resize);
+
+        class Particle {
+            constructor() { this.reset(); }
+            reset() {
+                this.x = Math.random() * W;
+                this.y = Math.random() * H;
+                this.size = Math.random() * 2.5 + 0.5;
+                this.speedX = (Math.random() - 0.5) * 0.4;
+                this.speedY = (Math.random() - 0.5) * 0.4;
+                this.opacity = Math.random() * 0.5 + 0.1;
+                this.color = ['#7f5af0', '#2cb67d', '#e16162', '#8ec5fc', '#f0c27f'][Math.floor(Math.random() * 5)];
+                this.pulse = Math.random() * Math.PI * 2;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.pulse += 0.02;
+
+                // Mouse attraction
+                const dx = mouseX - this.x;
+                const dy = mouseY - this.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < 150) {
+                    this.x += dx * 0.008;
+                    this.y += dy * 0.008;
+                    this.opacity = Math.min(this.opacity + 0.02, 0.8);
+                }
+
+                if (this.x < -20 || this.x > W + 20 || this.y < -20 || this.y > H + 20) {
+                    this.reset();
+                    this.x = Math.random() < 0.5 ? -10 : W + 10;
+                }
+            }
+            draw() {
+                const s = this.size * (1 + Math.sin(this.pulse) * 0.3);
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, s, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.globalAlpha = this.opacity * (0.7 + Math.sin(this.pulse) * 0.3);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        const particles = Array.from({ length: 100 }, () => new Particle());
+
+        function drawConnections() {
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 120) {
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.strokeStyle = `rgba(127, 90, 240, ${0.12 * (1 - dist / 120)})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, W, H);
+            particles.forEach(p => { p.update(); p.draw(); });
+            drawConnections();
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+
+        // ─── MOUSE TRAIL ───
+        const trailCanvas = document.getElementById('trail');
+        const tctx = trailCanvas.getContext('2d');
+        trailCanvas.width = window.innerWidth;
+        trailCanvas.height = window.innerHeight;
+        window.addEventListener('resize', () => {
+            trailCanvas.width = window.innerWidth;
+            trailCanvas.height = window.innerHeight;
+        });
+
+        const trailPoints = [];
+        const maxTrail = 30;
+
+        document.addEventListener('mousemove', e => {
+            trailPoints.push({ x: e.clientX, y: e.clientY, life: 1 });
+            if (trailPoints.length > maxTrail) trailPoints.shift();
+        });
+
+        function animateTrail() {
+            tctx.clearRect(0, 0, trailCanvas.width, trailCanvas.height);
+            for (let i = 1; i < trailPoints.length; i++) {
+                const p = trailPoints[i];
+                const prev = trailPoints[i - 1];
+                p.life -= 0.025;
+                if (p.life <= 0) continue;
+
+                tctx.beginPath();
+                tctx.moveTo(prev.x, prev.y);
+                tctx.lineTo(p.x, p.y);
+                const alpha = p.life * 0.4;
+                const width = p.life * 3;
+                tctx.strokeStyle = `rgba(127, 90, 240, ${alpha})`;
+                tctx.lineWidth = width;
+                tctx.lineCap = 'round';
+                tctx.stroke();
+            }
+            // Clean dead points
+            while (trailPoints.length > 0 && trailPoints[0].life <= 0) {
+                trailPoints.shift();
+            }
+            requestAnimationFrame(animateTrail);
+        }
+        animateTrail();
+    </script>
+</body>
+
+</html>
